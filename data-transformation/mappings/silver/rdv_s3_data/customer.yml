@@ -1,0 +1,55 @@
+# ==============================================================================
+# RAW DATA VAULT MAPPING: CUSTOMER (Source: CUSTOMER)
+# ==============================================================================
+
+source_model: "BRONZE.S3_DATA.TB_CUSTOMER"
+
+# ------------------------------------------------------------------------------
+# 1. HUBS (Core Business Entities)
+# ------------------------------------------------------------------------------
+hubs:
+  - target_model: "HUB_CUSTOMER"
+    hash_key: "HK_CUSTOMER"
+    business_keys: 
+      ID_CUSTOMER: "C_CUSTKEY"
+
+  - target_model: "HUB_NATION"
+    hash_key: "HK_NATION"
+    business_keys: 
+      ID_NATION: "C_NATIONKEY"
+
+# ------------------------------------------------------------------------------
+# 2. LINKS (Relationships between Hubs)
+# ------------------------------------------------------------------------------
+links:
+  - target_model: "LNK_CUSTOMER_NATION"
+    hash_key: "HK_LNK_CUSTOMER_NATION"
+    foreign_hash_keys:
+      - "HK_CUSTOMER"
+      - "HK_NATION"
+
+# ------------------------------------------------------------------------------
+# 3. SATELLITES (Descriptive Context)
+# ------------------------------------------------------------------------------
+satellites:
+  - target_model: "SAT_CUSTOMER_CONTACT"
+    parent_hash_key: "HK_CUSTOMER"
+    diff_hash: "HD_CUSTOMER"
+    payload:
+      NAME: "C_NAME"
+      ADDRESS: "C_ADDRESS"
+      PHONE: "C_PHONE"
+      COMMENT: "C_COMMENT"
+  - target_model: "SAT_CUSTOMER_ACCOUNT"
+    parent_hash_key: "HK_CUSTOMER"
+    diff_hash: "HD_CUSTOMER"
+    payload:
+      ACCTBAL: "C_ACCTBAL"
+      MKTSEGMENT: "C_MKTSEGMENT"
+
+# ------------------------------------------------------------------------------
+# 4. METADATA MAPPING 
+# ------------------------------------------------------------------------------
+metadata:
+  load_timestamp: "_LOAD_TIMESTAMP"
+  record_source: "_RECORD_SOURCE"

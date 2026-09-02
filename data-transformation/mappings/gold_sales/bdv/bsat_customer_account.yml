@@ -1,0 +1,45 @@
+target_model: "BSAT_CUSTOMER_ACCOUNT"
+
+# ------------------------------------------------------------------------------
+# METADATA & CONFIGURATION
+# ------------------------------------------------------------------------------
+config:
+  materialization: "incremental"
+
+semantics:
+  description: "Business Data Vault satellite containing cleansed attributes, contact information, and market segmentation for customers."
+
+# ------------------------------------------------------------------------------
+# DATA VAULT KEYS
+# ------------------------------------------------------------------------------
+parent_hub: "HUB_CUSTOMER"
+hash_key: "HK_CUSTOMER"
+diff_hash: "HD_BDV_CUSTOMER_ACCOUNT"
+
+# ------------------------------------------------------------------------------
+# PAYLOAD: TRANSFORMATIONS & QUALITY
+# ------------------------------------------------------------------------------
+source_models:
+  - "SAT_CUSTOMER_ACCOUNT"
+
+payload:
+  - target_column: "ACCOUNT_BALANCE_VL"
+    source_expression: "CAST(ACCTBAL AS NUMBER(38,2))"
+    semantics:
+      description: "The current financial account balance for the customer in the base currency."
+    quality:
+      - test: "not_null"
+
+  - target_column: "MARKET_SEGMENT_NAME"
+    source_expression: "UPPER(TRIM(MKTSEGMENT))"
+    semantics:
+      description: "The designated market segment the customer belongs to (e.g., AUTOMOBILE, BUILDING)."
+    quality:
+      - test: "not_null"
+
+  - target_column: "IS_PREMIUM_CUSTOMER_FL"
+    source_expression: "CAST(CASE WHEN ACCTBAL > 5000 THEN 1 ELSE 0 END AS BOOLEAN)"
+    semantics:
+      description: "Business rule flag identifying premium customers based on their account balance exceeding a defined threshold."
+    quality:
+      - test: "not_null"

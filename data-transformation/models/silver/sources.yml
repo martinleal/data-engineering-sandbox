@@ -1,0 +1,14 @@
+version: 2
+sources:
+- name: BRONZE__S3_DATA
+  database: BRONZE
+  schema: S3_DATA
+  tables:
+  - name: TB_CUSTOMER
+  - name: TB_LINEITEM
+  - name: TB_NATION
+  - name: TB_ORDERS
+  - name: TB_PART
+  - name: TB_PARTSUPP
+  - name: TB_REGION
+  - name: TB_SUPPLIER

@@ -1,0 +1,31 @@
+target_model: "BSAT_NATION"
+
+# ------------------------------------------------------------------------------
+# METADATA & CONFIGURATION
+# ------------------------------------------------------------------------------
+config:
+  materialization: "incremental"
+
+semantics:
+  description: "Business Data Vault satellite containing cleansed geographic country reference data."
+
+# ------------------------------------------------------------------------------
+# DATA VAULT KEYS
+# ------------------------------------------------------------------------------
+parent_hub: "HUB_NATION"
+hash_key: "HK_NATION"
+diff_hash: "HD_BDV_NATION"
+
+# ------------------------------------------------------------------------------
+# PAYLOAD: TRANSFORMATIONS & QUALITY
+# ------------------------------------------------------------------------------
+source_models:
+  - "SAT_NATION"
+
+payload:
+  - target_column: "NATION_NAME"
+    source_expression: "UPPER(TRIM(NAME))"
+    semantics:
+      description: "The full, standardized, and capitalized name of the nation."
+    quality:
+      - test: "not_null"

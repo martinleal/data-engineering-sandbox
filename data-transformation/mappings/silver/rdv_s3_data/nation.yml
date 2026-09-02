@@ -1,0 +1,47 @@
+# ==============================================================================
+# RAW DATA VAULT MAPPING: NATION (Source: NATION)
+# ==============================================================================
+
+source_model: "BRONZE.S3_DATA.TB_NATION"
+
+# ------------------------------------------------------------------------------
+# 1. HUBS (Core Business Entities)
+# ------------------------------------------------------------------------------
+hubs:
+  - target_model: "HUB_NATION"
+    hash_key: "HK_NATION"
+    business_keys: 
+      ID_NATION: "N_NATIONKEY"
+
+  - target_model: "HUB_REGION"
+    hash_key: "HK_REGION"
+    business_keys: 
+      ID_REGION: "N_REGIONKEY"
+
+# ------------------------------------------------------------------------------
+# 2. LINKS (Relationships between Hubs)
+# ------------------------------------------------------------------------------
+links:
+  - target_model: "LNK_NATION_REGION"
+    hash_key: "HK_LNK_NATION_REGION"
+    foreign_hash_keys:
+      - "HK_NATION"
+      - "HK_REGION"
+
+# ------------------------------------------------------------------------------
+# 3. SATELLITES (Descriptive Context)
+# ------------------------------------------------------------------------------
+satellites:
+  - target_model: "SAT_NATION"
+    parent_hash_key: "HK_NATION"
+    diff_hash: "HD_NATION"
+    payload:
+      NAME: "N_NAME"
+      COMMENT: "N_COMMENT"
+
+# ------------------------------------------------------------------------------
+# 4. METADATA MAPPING 
+# ------------------------------------------------------------------------------
+metadata:
+  load_timestamp: "_LOAD_TIMESTAMP"
+  record_source: "_RECORD_SOURCE"

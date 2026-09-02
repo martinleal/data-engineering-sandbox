@@ -1,0 +1,79 @@
+# ==============================================================================
+# RAW DATA VAULT MAPPING: ORDER LINE (Source: LINEITEM)
+# ==============================================================================
+
+source_model: "BRONZE.S3_DATA.TB_LINEITEM"
+
+# ------------------------------------------------------------------------------
+# 1. HUBS (Core Business Entities)
+# ------------------------------------------------------------------------------
+hubs:
+  - target_model: "HUB_ORDER_LINE"
+    hash_key: "HK_ORDER_LINE"
+    business_keys: 
+      ID_ORDER: "L_ORDERKEY"
+      ID_ORDER_LINE: "L_LINENUMBER"
+
+  - target_model: "HUB_ORDER"
+    hash_key: "HK_ORDER"
+    business_keys: 
+      ID_ORDER: "L_ORDERKEY"
+
+  - target_model: "HUB_PRODUCT"
+    hash_key: "HK_PRODUCT"
+    business_keys: 
+      ID_PRODUCT: "L_PARTKEY"
+
+  - target_model: "HUB_SUPPLIER"
+    hash_key: "HK_SUPPLIER"
+    business_keys: 
+      ID_SUPPLIER: "L_SUPPKEY"
+
+# ------------------------------------------------------------------------------
+# 2. LINKS (Relationships between Hubs)
+# ------------------------------------------------------------------------------
+links:
+  - target_model: "LNK_ORDER_LINE"
+    hash_key: "HK_LNK_ORDER_LINE"
+    foreign_hash_keys:
+      - "HK_ORDER_LINE"
+      - "HK_ORDER"
+  - target_model: "LNK_ORDER_LINE_PRODUCT_SUPPLIER"
+    hash_key: "HK_LNK_ORDER_LINE_PRODUCT_SUPPLIER"
+    foreign_hash_keys:
+      - "HK_ORDER_LINE"
+      - "HK_ORDER"
+      - "HK_PRODUCT"
+      - "HK_SUPPLIER"
+
+# ------------------------------------------------------------------------------
+# 3. SATELLITES (Descriptive Context)
+# ------------------------------------------------------------------------------
+satellites:
+  - target_model: "SAT_ORDER_LINE_FINANCE"
+    parent_hash_key: "HK_ORDER_LINE"
+    diff_hash: "HD_ORDER_LINE_FINANCE"
+    payload:
+      QUANTITY: "L_QUANTITY"
+      EXTENDEDPRICE: "L_EXTENDEDPRICE"
+      DISCOUNT: "L_DISCOUNT"
+      TAX: "L_TAX"
+
+  - target_model: "SAT_ORDER_LINE_LOGISTICS"
+    parent_hash_key: "HK_ORDER_LINE"
+    diff_hash: "HD_ORDER_LINE_LOGISTICS"
+    payload:
+      RETURNFLAG: "L_RETURNFLAG"
+      LINESTATUS: "L_LINESTATUS"
+      SHIPDATE: "L_SHIPDATE"
+      COMMITDATE: "L_COMMITDATE"
+      RECEIPTDATE: "L_RECEIPTDATE"
+      SHIPINSTRUCT: "L_SHIPINSTRUCT"
+      SHIPMODE: "L_SHIPMODE"
+
+# ------------------------------------------------------------------------------
+# 4. METADATA MAPPING 
+# ------------------------------------------------------------------------------
+metadata:
+  load_timestamp: "_LOAD_TIMESTAMP"
+  record_source: "_RECORD_SOURCE"

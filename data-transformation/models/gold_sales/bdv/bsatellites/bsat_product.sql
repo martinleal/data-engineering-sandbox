@@ -1,0 +1,36 @@
+{{ config(materialized='incremental', schema='BDV_SALES') }}
+
+WITH source_data AS (
+    SELECT 
+        HK_PRODUCT,
+        _LOAD_TIMESTAMP,
+        _RECORD_SOURCE,
+        TRIM(NAME) AS PRODUCT_NAME,
+        TRIM(MFGR) AS MANUFACTURER_NAME,
+        TRIM(BRAND) AS BRAND_NAME,
+        TRIM(TYPE) AS PRODUCT_TYPE_NAME,
+        CAST(SIZE AS INTEGER) AS PRODUCT_SIZE_NUM,
+        UPPER(TRIM(CONTAINER)) AS CONTAINER_TYPE_CD,
+        CAST(RETAILPRICE AS NUMBER(38,2)) AS RETAIL_PRICE_VL,
+        CAST(CASE WHEN RETAILPRICE > 1500 THEN 1 ELSE 0 END AS BOOLEAN) AS IS_PREMIUM_PRODUCT
+    FROM {{ ref('sat_product') }}
+),
+
+stage_bdv AS (
+    SELECT
+        HK_PRODUCT,
+        _LOAD_TIMESTAMP,
+        _RECORD_SOURCE,
+        {{ dbt_utils.generate_surrogate_key(['PRODUCT_NAME', 'MANUFACTURER_NAME', 'BRAND_NAME', 'PRODUCT_TYPE_NAME', 'PRODUCT_SIZE_NUM', 'CONTAINER_TYPE_CD', 'RETAIL_PRICE_VL', 'IS_PREMIUM_PRODUCT']) }} AS HD_BDV_PRODUCT,
+        PRODUCT_NAME,
+        MANUFACTURER_NAME,
+        BRAND_NAME,
+        PRODUCT_TYPE_NAME,
+        PRODUCT_SIZE_NUM,
+        CONTAINER_TYPE_CD,
+        RETAIL_PRICE_VL,
+        IS_PREMIUM_PRODUCT        
+    FROM source_data
+)
+
+SELECT * FROM stage_bdv

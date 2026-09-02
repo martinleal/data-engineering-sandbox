@@ -1,0 +1,55 @@
+target_model: "BSAT_CUSTOMER_CONTACT"
+
+# ------------------------------------------------------------------------------
+# METADATA & CONFIGURATION
+# ------------------------------------------------------------------------------
+config:
+  materialization: "incremental"
+
+semantics:
+  description: "Business Data Vault satellite containing cleansed attributes, contact information, and market segmentation for customers."
+
+# ------------------------------------------------------------------------------
+# DATA VAULT KEYS
+# ------------------------------------------------------------------------------
+parent_hub: "HUB_CUSTOMER"
+hash_key: "HK_CUSTOMER"
+diff_hash: "HD_BDV_CUSTOMER_CONTACT"
+
+# ------------------------------------------------------------------------------
+# PAYLOAD: TRANSFORMATIONS & QUALITY
+# ------------------------------------------------------------------------------
+source_models:
+  - "SAT_CUSTOMER_CONTACT"
+
+payload:
+  - target_column: "CUSTOMER_NAME"
+    source_expression: "TRIM(NAME)"
+    semantics:
+      description: "The full, standardized name of the customer."
+    security:
+      pii: true
+      category: "DIRECT_IDENTIFIER"
+      masking_policy: "MASK_FULL_STRING"
+    quality:
+      - test: "not_null"
+
+  - target_column: "ADDRESS_TX"
+    source_expression: "TRIM(ADDRESS)"
+    semantics:
+      description: "The physical street address of the customer."
+    security:
+      pii: true
+      category: "LOCATION"
+      masking_policy: "MASK_FULL_STRING"
+    quality:
+      - test: "not_null"
+
+  - target_column: "PHONE_NUMBER_TX"
+    source_expression: "TRIM(PHONE)"
+    semantics:
+      description: "The primary contact phone number for the customer."
+    security:
+      pii: true
+      category: "DIRECT_IDENTIFIER"
+      masking_policy: "MASK_FULL_STRING"

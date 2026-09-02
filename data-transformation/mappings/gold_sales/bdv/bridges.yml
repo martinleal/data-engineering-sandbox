@@ -1,0 +1,75 @@
+# ==============================================================================
+# BUSINESS DATA VAULT: SALES DOMAIN BRIDGES
+# Description: Flattens complex Link-to-Link relationships for Information Marts
+# ==============================================================================
+
+config:
+  # Bridges are typically materialized as tables or incremental, as they involve 
+  # heavy joins that you don't want to compute at query time in the BI layer.
+  materialization: "table" 
+
+bridges:
+  # ----------------------------------------------------------------------------
+  # BRIDGE: CUSTOMER TO ORDER LINE TO FULFILLMENT
+  # ----------------------------------------------------------------------------
+  - target_model: "BRG_CUSTOMER_ORDER_LINE"
+    semantics:
+      description: "Flattens the relationship from Customer down to Order Line, Product, and Supplier into a single row per Order Line to eliminate multi-hop BI joins."
+    
+    # The columns that will be SELECTed and exposed by the Bridge
+    bridge_keys:
+      - "lnk_olps.HK_ORDER_LINE"
+      - "lnk_olps.HK_ORDER"
+      - "lnk_oc.HK_CUSTOMER"
+      - "lnk_olps.HK_PRODUCT"
+      - "lnk_olps.HK_SUPPLIER"
+      - "lnk_cn.HK_NATION AS HK_CUSTOMER_NATION"
+      - "lnk_nr_cust.HK_REGION AS HK_CUSTOMER_REGION"
+      - "lnk_sn.HK_NATION AS HK_SUPPLIER_NATION"
+      - "lnk_nr_supp.HK_REGION AS HK_SUPPLIER_REGION"
+      
+    # The blueprint for the dbt macro to dynamically construct the FROM/JOIN clauses
+    join_path:
+      # 1. Base: Order Line - Product - Supplier
+      - table: "RDV_S3_DATA.LNK_ORDER_LINE_PRODUCT_SUPPLIER"
+        alias: "lnk_olps"
+      # 2. Join Customer
+      - table: "RDV_S3_DATA.LNK_ORDER_CUSTOMER"
+        alias: "lnk_oc"
+        join_on: "lnk_olps.HK_ORDER = lnk_oc.HK_ORDER"
+      # 3. Join Customer Nation & Region
+      - table: "RDV_S3_DATA.LNK_CUSTOMER_NATION"
+        alias: "lnk_cn"
+        join_on: "lnk_oc.HK_CUSTOMER = lnk_cn.HK_CUSTOMER"
+      
+      - table: "RDV_S3_DATA.LNK_NATION_REGION"
+        alias: "lnk_nr_cust"
+        join_on: "lnk_cn.HK_NATION = lnk_nr_cust.HK_NATION"
+      
+      # 4. Join Supplier Nation & Region
+      - table: "RDV_S3_DATA.LNK_SUPPLIER_NATION"
+        alias: "lnk_sn"
+        join_on: "lnk_olps.HK_SUPPLIER = lnk_sn.HK_SUPPLIER"
+      - table: "RDV_S3_DATA.LNK_NATION_REGION"
+        alias: "lnk_nr_supp"
+        join_on: "lnk_sn.HK_NATION = lnk_nr_supp.HK_NATION"
+
+      
+        
+    quality:
+      - column: "HK_ORDER_LINE"
+        tests:
+          - "not_null"
+          - "unique" 
+      - column: "HK_CUSTOMER"
+        tests:
+          - "not_null"
+      - column: "HK_ORDER"
+        tests:
+          - "not_null"
+      - column: "HK_PRODUCT"
+        tests:
+          - "not_null"
+      - column: "HK_SUPPLIER"
+        tests:
+          - "not_null"

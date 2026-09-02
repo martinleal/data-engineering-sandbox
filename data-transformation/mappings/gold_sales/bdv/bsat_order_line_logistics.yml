@@ -1,0 +1,76 @@
+target_model: "BSAT_ORDER_LINE_LOGISTICS"
+
+# ------------------------------------------------------------------------------
+# METADATA & CONFIGURATION
+# ------------------------------------------------------------------------------
+config:
+  materialization: "incremental"
+
+semantics:
+  description: "Business Data Vault satellite containing cleansed logistics, shipping details, and performance metrics for order lines."
+
+# ------------------------------------------------------------------------------
+# DATA VAULT KEYS
+# ------------------------------------------------------------------------------
+parent_hub: "HUB_ORDER_LINE"
+hash_key: "HK_ORDER_LINE"
+diff_hash: "HD_BDV_ORDER_LINE_LOGISTICS"
+
+# ------------------------------------------------------------------------------
+# PAYLOAD: TRANSFORMATIONS & QUALITY
+# ------------------------------------------------------------------------------
+source_models:
+  - "SAT_ORDER_LINE_LOGISTICS"
+
+payload:
+  - target_column: "RETURN_FLAG_CD"
+    source_expression: "UPPER(TRIM(RETURNFLAG))"
+    semantics:
+      description: "Standardized code indicating if the item was returned (e.g., R = Returned, A = Accepted, N = None)."
+    quality:
+      - test: "not_null"
+
+  - target_column: "LINE_STATUS_CD"
+    source_expression: "UPPER(TRIM(LINESTATUS))"
+    semantics:
+      description: "Standardized code indicating the fulfillment status of the line item (e.g., O = Open, F = Filled)."
+    quality:
+      - test: "not_null"
+      - test: "accepted_values"
+        values: ['O', 'F']
+
+  - target_column: "SHIP_DT"
+    source_expression: "CAST(SHIPDATE AS DATE)"
+    semantics:
+      description: "The calendar date when the product was actually shipped."
+    quality:
+      - test: "not_null"
+
+  - target_column: "COMMIT_DT"
+    source_expression: "CAST(COMMITDATE AS DATE)"
+    semantics:
+      description: "The calendar date when the logistics department committed to shipping the product."
+    quality:
+      - test: "not_null"
+
+  - target_column: "RECEIPT_DT"
+    source_expression: "CAST(RECEIPTDATE AS DATE)"
+    semantics:
+      description: "The calendar date when the customer received the product."
+
+  - target_column: "SHIP_INSTRUCTION_TX"
+    source_expression: "TRIM(SHIPINSTRUCT)"
+    semantics:
+      description: "Standardized handling instructions for the carrier (e.g., DELIVER IN PERSON)."
+
+  - target_column: "SHIP_MODE_CD"
+    source_expression: "UPPER(TRIM(SHIPMODE))"
+    semantics:
+      description: "The method of transportation used for delivery (e.g., AIR, TRUCK, SHIP)."
+
+  - target_column: "IS_LATE_SHIPMENT_FL"
+    source_expression: "CAST(CASE WHEN SHIPDATE > COMMITDATE THEN 1 ELSE 0 END AS BOOLEAN)"
+    semantics:
+      description: "Calculated boolean flag (TRUE/FALSE) indicating if the shipment missed its committed date."
+    quality:
+      - test: "not_null"
