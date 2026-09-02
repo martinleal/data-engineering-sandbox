@@ -1,0 +1,4 @@
+PyYAML==6.0.3
+dbt-snowflake>=1.7.0
+pyyaml>=6.0
+apache-airflow-providers-snowflake>=5.0.0

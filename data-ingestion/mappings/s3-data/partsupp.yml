@@ -1,0 +1,46 @@
+# ==============================================================================
+# PIPELINE METADATA
+# ==============================================================================
+pipeline:
+  name: "LOAD_TB_PARTSUPP"
+  owner: "data_engineering_core"
+  description: "Loads raw files from S3 into the Bronze layer."
+  tags:
+    domain: "sales"
+    data_classification: "internal"
+
+# ==============================================================================
+# TARGET DEFINITION
+# ==============================================================================
+target:
+  database: "BRONZE"
+  schema: "S3_DATA"
+  table: "TB_PARTSUPP"
+
+# ==============================================================================
+# SOURCE DEFINITION (Security Enforced)
+# ==============================================================================
+source:
+  stage_name: "@BRONZE.S3_DATA.STG_S3_DATA"
+  file_path: null
+  pattern: null
+
+# ==============================================================================
+# COPY INTO OPTIONS (Optional - Defaults applied if missing)
+# ==============================================================================
+copy_into:
+  on_error: "ABORT_STATEMENT"
+  file_format:
+    file_format_name: BRONZE.S3_DATA.FF_CSV_STANDARD
+    type: null
+    skip_header: null
+    field_delimiter: null
+    error_on_column_count_mismatch: null
+
+# ==============================================================================
+# COMPUTE & ORCHESTRATION
+# ==============================================================================
+orchestration:
+  warehouse: "BRONZE_WH"
+  schedule: "USING CRON 0 7 1 * * Europe/Madrid"
+  
