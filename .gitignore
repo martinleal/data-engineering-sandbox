@@ -2,3 +2,4 @@ data-transformation/target
 data-transformation/dbt_packages
 data-transformation/logs
 venv/
+logs/

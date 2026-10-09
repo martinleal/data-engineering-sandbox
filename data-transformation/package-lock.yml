@@ -1,14 +1,14 @@
 packages:
-  - name: dbtvault
-    package: Datavault-UK/dbtvault
-    version: 0.9.5
+  - name: automate_dv
+    package: Datavault-UK/automate_dv
+    version: 0.11.5
   - name: dbt_utils
     package: dbt-labs/dbt_utils
     version: 1.4.1
   - name: dbt_expectations
-    package: calogica/dbt_expectations
-    version: 0.10.4
+    package: metaplane/dbt_expectations
+    version: 0.10.10
   - name: dbt_date
-    package: calogica/dbt_date
-    version: 0.10.1
-sha1_hash: bd63af31227553e1603ad00d9c07a303586a5466
+    package: godatadriven/dbt_date
+    version: 0.21.0
+sha1_hash: c713db35aed2f87282d7e8714385e6556e02009f
