@@ -10,6 +10,10 @@ WITH source_data AS (
         COALESCE(TAX, 0.00) AS TAX_PCT,
         EXTENDEDPRICE * (1 - COALESCE(DISCOUNT, 0.00)) AS NET_REVENUE_AMT
     FROM {{ ref('sat_order_line_finance') }}
+    QUALIFY ROW_NUMBER() OVER (
+        PARTITION BY HK_ORDER_LINE
+        ORDER BY _LOAD_TIMESTAMP DESC
+    ) = 1
 ),
 
 stage_bdv AS (

@@ -6,6 +6,10 @@ WITH source_data AS (
         _RECORD_SOURCE,
         UPPER(TRIM(NAME)) AS NATION_NAME
     FROM {{ ref('sat_nation') }}
+    QUALIFY ROW_NUMBER() OVER (
+        PARTITION BY HK_NATION
+        ORDER BY _LOAD_TIMESTAMP DESC
+    ) = 1
 ),
 
 stage_bdv AS (

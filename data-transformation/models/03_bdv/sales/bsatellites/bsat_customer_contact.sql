@@ -8,6 +8,10 @@ WITH source_data AS (
         TRIM(ADDRESS) AS ADDRESS_TX,
         TRIM(PHONE) AS PHONE_NUMBER_TX
     FROM {{ ref('sat_customer_contact') }}
+    QUALIFY ROW_NUMBER() OVER (
+        PARTITION BY HK_CUSTOMER
+        ORDER BY _LOAD_TIMESTAMP DESC
+    ) = 1
 ),
 
 stage_bdv AS (

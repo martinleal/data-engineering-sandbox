@@ -1,81 +1,21 @@
+-- depends_on: {{ ref('bsat_order_line_finance') }}
+-- depends_on: {{ ref('bsat_order_line_logistics') }}
+-- depends_on: {{ ref('bsat_order') }}
+-- depends_on: {{ ref('brg_customer_order_line') }}
+
 {{ config(
     materialized='incremental',
     incremental_strategy='merge',
     unique_key='ORDER_LINE_KEY'
 ) }}
 
-WITH line_finance AS (
-
-    SELECT
-        HK_ORDER_LINE,
-        _LOAD_TIMESTAMP,
-        QUANTITY_VL,
-        GROSS_AMOUNT_VL,
-        DISCOUNT_PCT,
-        TAX_PCT,
-        NET_REVENUE_AMT
-    FROM {{ ref('bsat_order_line_finance') }}
-    QUALIFY ROW_NUMBER() OVER (
-        PARTITION BY HK_ORDER_LINE
-        ORDER BY
-            _LOAD_TIMESTAMP DESC,
-            HD_BDV_ORDER_LINE_FINANCE DESC
-    ) = 1
-
-),
-
-line_logistics AS (
-
-    SELECT
-        HK_ORDER_LINE,
-        _LOAD_TIMESTAMP,
-        RETURN_FLAG_CD,
-        LINE_STATUS_CD,
-        SHIP_DT,
-        COMMIT_DT,
-        RECEIPT_DT,
-        SHIP_INSTRUCTION_TX,
-        SHIP_MODE_CD,
-        IS_LATE_SHIPMENT_FL
-    FROM {{ ref('bsat_order_line_logistics') }}
-    QUALIFY ROW_NUMBER() OVER (
-        PARTITION BY HK_ORDER_LINE
-        ORDER BY
-            _LOAD_TIMESTAMP DESC,
-            HD_BDV_ORDER_LINE_LOGISTICS DESC
-    ) = 1
-
-),
-
-order_latest AS (
-
-    SELECT
-        HK_ORDER,
-        _LOAD_TIMESTAMP,
-        ORDER_STATUS_CD,
-        TOTAL_PRICE_VL,
-        ORDER_DT,
-        ORDER_PRIORITY_CD,
-        CLERK_TX,
-        SHIP_PRIORITY_CD
-    FROM {{ ref('bsat_order') }}
-    QUALIFY ROW_NUMBER() OVER (
-        PARTITION BY HK_ORDER
-        ORDER BY
-            _LOAD_TIMESTAMP DESC,
-            HD_BDV_ORDER DESC
-    ) = 1
-
-),
-
-changed_order_lines AS (
+{% if is_incremental() %}
+WITH changed_order_lines AS (
 
     -- Bridge changes: includes changes to relationships
     -- represented by the bridge's summary timestamp.
     SELECT b.HK_ORDER_LINE
     FROM {{ ref('brg_customer_order_line') }} b
-
-    {% if is_incremental() %}
 
     WHERE b._LOAD_TIMESTAMP > (
         SELECT COALESCE(
@@ -126,17 +66,18 @@ changed_order_lines AS (
         )
         FROM {{ this }}
     )
-
-    {% endif %}
-
 )
-
+{% endif %}
 SELECT
     b.HK_ORDER_LINE AS ORDER_LINE_KEY,
     b.HK_ORDER AS ORDER_KEY,
     b.HK_CUSTOMER AS CUSTOMER_KEY,
+    b.HK_CUSTOMER_REGION AS CUSTOMER_REGION_KEY,
+    b.HK_CUSTOMER_NATION AS CUSTOMER_NATION_KEY,
     b.HK_PRODUCT AS PRODUCT_KEY,
     b.HK_SUPPLIER AS SUPPLIER_KEY,
+    b.HK_SUPPLIER_REGION AS SUPPLIER_REGION_KEY,
+    b.HK_SUPPLIER_NATION AS SUPPLIER_NATION_KEY,
 
     -- Order-level attributes
     o.ORDER_STATUS_CD,
@@ -182,18 +123,18 @@ SELECT
 
 FROM {{ ref('brg_customer_order_line') }} b
 
-LEFT JOIN line_finance f
+LEFT JOIN {{ ref('bsat_order_line_finance') }} f
     ON b.HK_ORDER_LINE = f.HK_ORDER_LINE
 
-LEFT JOIN line_logistics l
+LEFT JOIN {{ ref('bsat_order_line_logistics') }} l
     ON b.HK_ORDER_LINE = l.HK_ORDER_LINE
 
-LEFT JOIN order_latest o
+LEFT JOIN {{ ref('bsat_order') }} o
     ON b.HK_ORDER = o.HK_ORDER
-
+{% if is_incremental() %}
 WHERE EXISTS (
     SELECT 1
     FROM changed_order_lines c
     WHERE c.HK_ORDER_LINE = b.HK_ORDER_LINE
 )
-
+{% endif %}

@@ -6,6 +6,10 @@ WITH source_data AS (
         _RECORD_SOURCE,
         UPPER(TRIM(NAME)) AS REGION_NAME
     FROM {{ ref('sat_region') }}
+    QUALIFY ROW_NUMBER() OVER (
+        PARTITION BY HK_REGION
+        ORDER BY _LOAD_TIMESTAMP DESC
+    ) = 1
 ),
 
 stage_bdv AS (

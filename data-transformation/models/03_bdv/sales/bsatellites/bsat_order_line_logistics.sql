@@ -13,6 +13,10 @@ WITH source_data AS (
         UPPER(TRIM(SHIPMODE)) AS SHIP_MODE_CD,
         CAST(CASE WHEN SHIPDATE > COMMITDATE THEN 1 ELSE 0 END AS BOOLEAN) AS IS_LATE_SHIPMENT_FL
     FROM {{ ref('sat_order_line_logistics') }}
+    QUALIFY ROW_NUMBER() OVER (
+        PARTITION BY HK_ORDER_LINE
+        ORDER BY _LOAD_TIMESTAMP DESC
+    ) = 1
 ),
 
 stage_bdv AS (

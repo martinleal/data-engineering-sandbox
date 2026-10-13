@@ -12,6 +12,10 @@ WITH source_data AS (
         CAST(SHIPPRIORITY AS INTEGER) AS SHIP_PRIORITY_CD,
         TRIM(COMMENT) AS ORDER_COMMENT_TX
     FROM {{ ref('sat_order') }}
+    QUALIFY ROW_NUMBER() OVER (
+        PARTITION BY HK_ORDER
+        ORDER BY _LOAD_TIMESTAMP DESC
+    ) = 1
 ),
 
 stage_bdv AS (

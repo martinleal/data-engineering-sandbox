@@ -8,6 +8,10 @@ WITH source_data AS (
         UPPER(TRIM(MKTSEGMENT)) AS MARKET_SEGMENT_NAME,
         CAST(CASE WHEN ACCTBAL > 5000 THEN 1 ELSE 0 END AS BOOLEAN) AS IS_PREMIUM_CUSTOMER_FL
     FROM {{ ref('sat_customer_account') }}
+    QUALIFY ROW_NUMBER() OVER (
+        PARTITION BY HK_CUSTOMER
+        ORDER BY _LOAD_TIMESTAMP DESC
+    ) = 1
 ),
 
 stage_bdv AS (
