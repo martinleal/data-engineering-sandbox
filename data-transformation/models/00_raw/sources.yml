@@ -1,14 +1,157 @@
+
 version: 2
+
 sources:
-- name: TPCH_SF1
-  database: PRO_RAW
-  schema: TPCH_SF1
-  tables:
-  - name: CUSTOMER
-  - name: LINEITEM
-  - name: NATION
-  - name: ORDERS
-  - name: PART
-  - name: PARTSUPP
-  - name: REGION
-  - name: SUPPLIER
+  - name: TPCH_SF1
+    description: >
+      Raw TPC-H SF1 benchmark dataset stored in PRO_RAW.
+      Source tables are externally managed and are not built by dbt.
+    database: PRO_RAW
+    schema: TPCH_SF1
+
+    tables:
+      - name: CUSTOMER
+        description: "Customer master data. One row per customer."
+        columns:
+          - name: C_CUSTKEY
+            description: "Primary key identifying the customer."
+            data_tests:
+              - unique
+              - not_null
+          - name: C_NATIONKEY
+            description: "Nation associated with the customer."
+            data_tests:
+              - relationships:
+                  arguments:
+                    to: source('TPCH_SF1', 'NATION')
+                    field: N_NATIONKEY
+
+      - name: LINEITEM
+        description: >
+          Order line details, including product, supplier, quantity,
+          pricing, discount, tax and shipping information.
+          One row per order and line number.
+        data_tests:
+          - dbt_utils.unique_combination_of_columns:
+              arguments:
+                combination_of_columns:
+                  - L_ORDERKEY
+                  - L_LINENUMBER
+        columns:
+          - name: L_ORDERKEY
+            description: "Order containing this line."
+            data_tests:
+              - not_null
+              - relationships:
+                  arguments:
+                    to: source('TPCH_SF1', 'ORDERS')
+                    field: O_ORDERKEY
+          - name: L_PARTKEY
+            description: "Product referenced by this order line."
+            data_tests:
+              - relationships:
+                  arguments:
+                    to: source('TPCH_SF1', 'PART')
+                    field: P_PARTKEY
+          - name: L_SUPPKEY
+            description: "Supplier associated with this order line."
+            data_tests:
+              - relationships:
+                  arguments:
+                    to: source('TPCH_SF1', 'SUPPLIER')
+                    field: S_SUPPKEY
+
+      - name: NATION
+        description: "Nation reference data. One row per nation."
+        columns:
+          - name: N_NATIONKEY
+            description: "Primary key identifying the nation."
+            data_tests:
+              - unique
+              - not_null
+          - name: N_REGIONKEY
+            description: "Region containing the nation."
+            data_tests:
+              - relationships:
+                  arguments:
+                    to: source('TPCH_SF1', 'REGION')
+                    field: R_REGIONKEY
+
+      - name: ORDERS
+        description: >
+          Order header data. One row per order, including its customer,
+          order date, status, priority and total price.
+        columns:
+          - name: O_ORDERKEY
+            description: "Primary key identifying the order."
+            data_tests:
+              - unique
+              - not_null
+          - name: O_CUSTKEY
+            description: "Customer who placed the order."
+            data_tests:
+              - relationships:
+                  arguments:
+                    to: source('TPCH_SF1', 'CUSTOMER')
+                    field: C_CUSTKEY
+
+      - name: PART
+        description: "Product master data. One row per product."
+        columns:
+          - name: P_PARTKEY
+            description: "Primary key identifying the product."
+            data_tests:
+              - unique
+              - not_null
+
+      - name: PARTSUPP
+        description: >
+          Product-supplier associations, including available quantity,
+          supply cost and supplier-specific comments.
+          One row per product and supplier combination.
+        data_tests:
+          - dbt_utils.unique_combination_of_columns:
+              arguments:
+                combination_of_columns:
+                  - PS_PARTKEY
+                  - PS_SUPPKEY
+        columns:
+          - name: PS_PARTKEY
+            description: "Product supplied by this supplier."
+            data_tests:
+              - relationships:
+                  arguments:
+                    to: source('TPCH_SF1', 'PART')
+                    field: P_PARTKEY
+          - name: PS_SUPPKEY
+            description: "Supplier providing this product."
+            data_tests:
+              - relationships:
+                  arguments:
+                    to: source('TPCH_SF1', 'SUPPLIER')
+                    field: S_SUPPKEY
+
+      - name: REGION
+        description: "Region reference data. One row per region."
+        columns:
+          - name: R_REGIONKEY
+            description: "Primary key identifying the region."
+            data_tests:
+              - unique
+              - not_null
+
+      - name: SUPPLIER
+        description: "Supplier master data. One row per supplier."
+        columns:
+          - name: S_SUPPKEY
+            description: "Primary key identifying the supplier."
+            data_tests:
+              - unique
+              - not_null
+          - name: S_NATIONKEY
+            description: "Nation associated with the supplier."
+            data_tests:
+              - relationships:
+                  arguments:
+                    to: source('TPCH_SF1', 'NATION')
+                    field: N_NATIONKEY

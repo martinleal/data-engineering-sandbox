@@ -1,0 +1,151 @@
+
+version: 2
+
+models:
+  - name: dim_customer_account
+    description: >
+      Current-state customer account dimension. One row per customer,
+      containing account balance, market segment and premium-customer
+      classification. Implements SCD Type 1; historical account values
+      are not retained in this Gold model.
+    columns:
+      - name: CUSTOMER_KEY
+        description: "Data Vault hash key identifying the customer."
+        data_tests:
+          - unique
+          - not_null
+
+      - name: ACCOUNT_BALANCE_VL
+        description: "Current customer account balance."
+
+      - name: MARKET_SEGMENT_NAME
+        description: "Normalized market segment assigned to the customer."
+
+      - name: IS_PREMIUM_CUSTOMER_FL
+        description: >
+          Boolean classification indicating whether the customer account
+          balance exceeds the configured 5000 threshold.
+
+      - name: _SOURCE_LOAD_TIMESTAMP
+        description: "Load timestamp of the current BSAT record."
+
+  - name: dim_supplier_account
+    description: >
+      Current-state supplier account dimension. One row per supplier,
+      containing account balance and account status. Implements SCD Type 1.
+    columns:
+      - name: SUPPLIER_KEY
+        description: "Data Vault hash key identifying the supplier."
+        data_tests:
+          - unique
+          - not_null
+
+      - name: ACCOUNT_BALANCE_VL
+        description: "Current supplier account balance."
+
+      - name: ACCOUNT_STATUS_CD
+        description: "Current supplier account status code."
+
+      - name: _SOURCE_LOAD_TIMESTAMP
+        description: "Load timestamp of the current BSAT record."
+
+  - name: dim_nation
+    description: >
+      Current-state nation dimension containing the nation name.
+      One row per nation; implements SCD Type 1.
+    columns:
+      - name: NATION_KEY
+        description: "Data Vault hash key identifying the nation."
+        data_tests:
+          - unique
+          - not_null
+
+      - name: NATION_NAME
+        description: "Name of the nation."
+
+      - name: _SOURCE_LOAD_TIMESTAMP
+        description: "Load timestamp of the current BSAT record."
+
+  - name: dim_region
+    description: >
+      Current-state region dimension containing the region name.
+      One row per region; implements SCD Type 1.
+    columns:
+      - name: REGION_KEY
+        description: "Data Vault hash key identifying the region."
+        data_tests:
+          - unique
+          - not_null
+
+      - name: REGION_NAME
+        description: "Name of the region."
+
+      - name: _SOURCE_LOAD_TIMESTAMP
+        description: "Load timestamp of the current BSAT record."
+
+  - name: fct_order_line
+    description: >
+      Gold fact table at order-line grain: one row per order line.
+      Combines order-level attributes with line-level financial and
+      logistics information. Order-level measures such as TOTAL_PRICE_VL
+      are repeated across the order's lines and should not be summed
+      directly at this grain. Load timestamps identify the latest source
+      records used to build each fact row.
+
+    columns:
+      - name: ORDER_LINE_KEY
+        description: "Data Vault hash key identifying the order line."
+        data_tests:
+          - unique
+          - not_null
+
+      - name: ORDER_KEY
+        description: "Data Vault hash key identifying the parent order."
+        data_tests:
+          - not_null
+
+      - name: CUSTOMER_KEY
+        description: "Customer key used to join to dim_customer_account."
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_customer_account')
+                field: CUSTOMER_KEY
+
+      - name: SUPPLIER_KEY
+        description: "Supplier key used to join to dim_supplier_account."
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_supplier_account')
+                field: SUPPLIER_KEY
+
+      - name: PRODUCT_KEY
+        description: "Data Vault hash key identifying the product."
+
+      - name: TOTAL_PRICE_VL
+        description: >
+          Total price of the parent order, repeated for each order line.
+          Do not sum this column directly at order-line grain.
+
+      - name: QUANTITY_VL
+        description: "Quantity ordered on this line."
+
+      - name: GROSS_AMOUNT_VL
+        description: "Gross amount for this order line before discounts and taxes."
+
+      - name: NET_REVENUE_AMT
+        description: "Net revenue calculated for this order line."
+
+      - name: ORDER_DATE_KEY
+        description: "Date key representing the order date."
+
+      - name: SHIP_DATE_KEY
+        description: "Date key representing the shipment date."
+
+      - name: _LOAD_TIMESTAMP
+        description: >
+          Latest load timestamp among the source records used to
+          construct this fact row.

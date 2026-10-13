@@ -19,7 +19,7 @@ stage_bdv AS (
         HK_SUPPLIER,
         _LOAD_TIMESTAMP,
         _RECORD_SOURCE,
-        {{ dbt_utils.generate_surrogate_key(['SUPPLIER_NAME', 'ADDRESS_TX', 'PHONE_NUMBER_TX']) }} AS HD_BDV_SUPPLIER,
+        {{ dbt_utils.generate_surrogate_key(['SUPPLIER_NAME', 'ADDRESS_TX', 'PHONE_NUMBER_TX']) }} AS HD_BDV_SUPPLIER_CONTACT,
         SUPPLIER_NAME,
         ADDRESS_TX,
         PHONE_NUMBER_TX        
