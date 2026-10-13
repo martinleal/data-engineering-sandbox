@@ -8,6 +8,10 @@ sources:
       Source tables are externally managed and are not built by dbt.
     database: PRO_RAW
     schema: TPCH_SF1
+    config:
+      loaded_at_field: _LOAD_TIMESTAMP
+      freshness:
+        warn_after: {count: 24, period: hour} 
 
     tables:
       - name: CUSTOMER
