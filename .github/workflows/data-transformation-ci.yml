@@ -1,11 +1,8 @@
 
-name: Data Transformation CI
+name: Project CI
 
 on:
   pull_request:
-    paths:
-      - "data-transformation/**"
-      - ".github/workflows/data-transformation-ci.yml"
     branches:
       - main
 
@@ -13,10 +10,31 @@ on:
 
 permissions:
   contents: read
+  pull-requests: read
 
 jobs:
+  changes:
+    name: Detect changed directories
+    runs-on: ubuntu-latest
+    outputs:
+      data-transformation: ${{ steps.filter.outputs.data-transformation }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Detect transformation changes
+        id: filter
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            data-transformation:
+              - 'data-transformation/**'
+
   dbt-ci:
     name: Validate dbt project
+    needs: changes
+    if: github.event_name == 'workflow_dispatch' || needs.changes.outputs.data-transformation == 'true'
     runs-on: ubuntu-latest
 
     defaults:
@@ -48,3 +66,15 @@ jobs:
 
       - name: Build dbt project
         run: dbt build --target ci
+
+  project-ci:
+    name: Validate project CI
+    needs: [changes, dbt-ci]
+    if: always()
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check validation results
+        env:
+          NEEDS_JSON: ${{ toJSON(needs) }}
+        run: jq -e 'all(.[]; .result == "success" or .result == "skipped")' <<< "$NEEDS_JSON"
