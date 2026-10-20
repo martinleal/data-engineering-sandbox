@@ -42,7 +42,7 @@ CREATE USER IF NOT EXISTS DATA_CI_GITHUB
     DEFAULT_ROLE = DATA_CI
     DEFAULT_WAREHOUSE = WH_CI;
 
-GRANT ROLE DATA_CI TO USER DATA_CI_GITHUB;
+GRANT ROLE DATA_CI TO USER DATA_CI_GITHUB; 
 
 -- To create private and public keys in local environment:
 -- openssl genrsa 2048 | openssl pkcs8 -topk8 -inform PEM -out rsa_key.p8 -nocrypt
