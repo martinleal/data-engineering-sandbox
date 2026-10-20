@@ -26,7 +26,7 @@ GRANT ROLE DATA_ARCHITECT TO ROLE SYSADMIN;
 -- 3. CREATE USERS
 -- ============================================================
 
--- Human developer
+
 CREATE USER IF NOT EXISTS DATA_ENGINEER_1
     PASSWORD = 'DUMMY'
     DEFAULT_ROLE = DATA_ENGINEER
@@ -36,14 +36,19 @@ CREATE USER IF NOT EXISTS DATA_ENGINEER_1
 GRANT ROLE DATA_ENGINEER TO USER DATA_ENGINEER_1;
 
 
--- GitHub Actions service user
--- Configure key-pair authentication separately.
+
 CREATE USER IF NOT EXISTS DATA_CI_GITHUB
     TYPE = SERVICE
     DEFAULT_ROLE = DATA_CI
     DEFAULT_WAREHOUSE = WH_CI;
 
 GRANT ROLE DATA_CI TO USER DATA_CI_GITHUB;
+
+-- To create private and public keys in local environment:
+-- openssl genrsa 2048 | openssl pkcs8 -topk8 -inform PEM -out rsa_key.p8 -nocrypt
+-- openssl rsa -in rsa_key.p8 -pubout -out rsa_key.pub
+ALTER USER DATA_CI_GITHUB
+SET RSA_PUBLIC_KEY = '<paste_public_key_here>';
 
 
 -- ============================================================
