@@ -46,5 +46,5 @@ jobs:
       - name: Install dbt packages
         run: dbt deps
 
-      - name: Compile dbt project
+      - name: Build dbt project
         run: dbt build --target ci
