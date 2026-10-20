@@ -17,6 +17,6 @@ where _LOAD_TIMESTAMP > (
 )
 {% endif %}
 qualify row_number() over (
-    partition by HK_NATION
+    partition by HK_NATION 
     order by _LOAD_TIMESTAMP desc, HD_BDV_NATION desc
 ) = 1
