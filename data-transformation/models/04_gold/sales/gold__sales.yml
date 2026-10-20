@@ -31,7 +31,7 @@ models:
 
   - name: dim_supplier_account
     description: >
-      Current-state supplier account dimension. One row per supplier, 
+      Current-state supplier account dimension. One row per supplier,
       containing account balance and account status. Implements SCD Type 1.
     columns:
       - name: SUPPLIER_KEY
