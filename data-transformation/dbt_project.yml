@@ -19,24 +19,24 @@ models:
   data_engineering_sandbox:
     01_stg:
       +materialized: view
-      +database: DEV_STG
+      +database: "{{ target.database }}_STG"
       tpch_sf1:
-        +schema: TPCH_SF1_DATA_ENGINEER_1
+        +schema: TPCH_SF1
 
     02_rdv:
       +materialized: incremental
-      +database: DEV_RDV
+      +database: "{{ target.database }}_RDV"
       tpch_sf1:
-        +schema: TPCH_SF1_DATA_ENGINEER_1
+        +schema: TPCH_SF1
 
     03_bdv:
       +materialized: view
-      +database: DEV_BDV
+      +database: "{{ target.database }}_BDV"
       sales:
-        +schema: SALES_DATA_ENGINEER_1
+        +schema: SALES
 
     04_gold:
       +materialized: incremental
-      +database: DEV_GOLD
+      +database: "{{ target.database }}_GOLD"
       sales:
-        +schema: SALES_DATA_ENGINEER_1
+        +schema: SALES

@@ -1,3 +1,4 @@
+
 USE ROLE ACCOUNTADMIN;
 
 -- ============================================================
@@ -6,35 +7,43 @@ USE ROLE ACCOUNTADMIN;
 
 CREATE ROLE IF NOT EXISTS DATA_ARCHITECT;
 CREATE ROLE IF NOT EXISTS DATA_ENGINEER;
+CREATE ROLE IF NOT EXISTS DATA_CI;
 
 
 -- ============================================================
 -- 2. ROLE HIERARCHY
 -- ============================================================
 
--- DATA_ARCHITECT inherits DATA_ENGINEER privileges.
--- This means an architect can also perform normal engineering work.
+-- Architect inherits engineering and CI privileges.
+-- SYSADMIN inherits the architect role.
 
 GRANT ROLE DATA_ENGINEER TO ROLE DATA_ARCHITECT;
+GRANT ROLE DATA_CI TO ROLE DATA_ARCHITECT;
 GRANT ROLE DATA_ARCHITECT TO ROLE SYSADMIN;
 
+
 -- ============================================================
--- 3. CREATE USER
+-- 3. CREATE USERS
 -- ============================================================
 
+-- Human developer
 CREATE USER IF NOT EXISTS DATA_ENGINEER_1
     PASSWORD = 'DUMMY'
     DEFAULT_ROLE = DATA_ENGINEER
     DEFAULT_WAREHOUSE = WH_DEV
     MUST_CHANGE_PASSWORD = FALSE;
 
-
--- Give the engineer role to the user
-
 GRANT ROLE DATA_ENGINEER TO USER DATA_ENGINEER_1;
--- Vincula el nuevo rol a la jerarquía global (así SYSADMIN hereda sus permisos)
 
 
+-- GitHub Actions service user
+-- Configure key-pair authentication separately.
+CREATE USER IF NOT EXISTS DATA_CI_GITHUB
+    TYPE = SERVICE
+    DEFAULT_ROLE = DATA_CI
+    DEFAULT_WAREHOUSE = WH_CI;
+
+GRANT ROLE DATA_CI TO USER DATA_CI_GITHUB;
 
 
 -- ============================================================
@@ -53,6 +62,12 @@ CREATE WAREHOUSE IF NOT EXISTS WH_DEV
     AUTO_RESUME = TRUE
     INITIALLY_SUSPENDED = TRUE;
 
+CREATE WAREHOUSE IF NOT EXISTS WH_CI
+    WAREHOUSE_SIZE = 'XSMALL'
+    AUTO_SUSPEND = 60
+    AUTO_RESUME = TRUE
+    INITIALLY_SUSPENDED = TRUE;
+
 CREATE WAREHOUSE IF NOT EXISTS WH_ADMIN
     WAREHOUSE_SIZE = 'XSMALL'
     AUTO_SUSPEND = 60
@@ -61,29 +76,41 @@ CREATE WAREHOUSE IF NOT EXISTS WH_ADMIN
 
 
 -- ============================================================
--- 5. GIVE DATA_ARCHITECT CONTROL OVER WAREHOUSES
+-- 5. ARCHITECT: WAREHOUSE CONTROL
 -- ============================================================
 
 GRANT USAGE, OPERATE, MODIFY
-ON WAREHOUSE WH_PRO
-TO ROLE DATA_ARCHITECT;
+ON WAREHOUSE WH_PRO TO ROLE DATA_ARCHITECT;
 
 GRANT USAGE, OPERATE, MODIFY
-ON WAREHOUSE WH_DEV
-TO ROLE DATA_ARCHITECT;
+ON WAREHOUSE WH_DEV TO ROLE DATA_ARCHITECT;
 
 GRANT USAGE, OPERATE, MODIFY
-ON WAREHOUSE WH_ADMIN
-TO ROLE DATA_ARCHITECT;
+ON WAREHOUSE WH_CI TO ROLE DATA_ARCHITECT;
+
+GRANT USAGE, OPERATE, MODIFY
+ON WAREHOUSE WH_ADMIN TO ROLE DATA_ARCHITECT;
 
 
 -- ============================================================
--- 6. GIVE DATA_ENGINEER COMPUTE ACCESS
+-- 6. ENGINEER: DEVELOPMENT COMPUTE
 -- ============================================================
 
 GRANT USAGE
-ON WAREHOUSE WH_DEV
-TO ROLE DATA_ENGINEER;
+ON WAREHOUSE WH_DEV TO ROLE DATA_ENGINEER;
 
-GRANT CREATE DATABASE ON ACCOUNT TO ROLE DATA_ARCHITECT;
 
+-- ============================================================
+-- 7. CI: DEDICATED COMPUTE
+-- ============================================================
+
+GRANT USAGE
+ON WAREHOUSE WH_CI TO ROLE DATA_CI;
+
+
+-- ============================================================
+-- 8. DATABASE CREATION
+-- ============================================================
+
+GRANT CREATE DATABASE
+ON ACCOUNT TO ROLE DATA_ARCHITECT;

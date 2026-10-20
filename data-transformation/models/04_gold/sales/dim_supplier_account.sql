@@ -9,7 +9,7 @@ SELECT
     HK_SUPPLIER AS SUPPLIER_KEY,
     ACCOUNT_BALANCE_VL,
     ACCOUNT_STATUS_CD,
-    _LOAD_TIMESTAMP AS _SOURCE_LOAD_TIMESTAMP
+    _LOAD_TIMESTAMP
 FROM {{ ref('bsat_supplier_account') }}
 {% if is_incremental() %}
 where _LOAD_TIMESTAMP > (

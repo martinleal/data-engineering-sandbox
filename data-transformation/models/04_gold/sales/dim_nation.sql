@@ -8,7 +8,7 @@
 SELECT
     HK_NATION AS NATION_KEY,
     NATION_NAME,
-    _LOAD_TIMESTAMP AS _SOURCE_LOAD_TIMESTAMP
+    _LOAD_TIMESTAMP
 FROM {{ ref('bsat_nation') }}
 {% if is_incremental() %}
 where _LOAD_TIMESTAMP > (

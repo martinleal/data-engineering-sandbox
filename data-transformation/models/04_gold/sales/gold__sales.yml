@@ -26,7 +26,7 @@ models:
           Boolean classification indicating whether the customer account
           balance exceeds the configured 5000 threshold.
 
-      - name: _SOURCE_LOAD_TIMESTAMP
+      - name: _LOAD_TIMESTAMP
         description: "Load timestamp of the current BSAT record."
 
   - name: dim_supplier_account
@@ -46,7 +46,7 @@ models:
       - name: ACCOUNT_STATUS_CD
         description: "Current supplier account status code."
 
-      - name: _SOURCE_LOAD_TIMESTAMP
+      - name: _LOAD_TIMESTAMP
         description: "Load timestamp of the current BSAT record."
 
   - name: dim_nation
@@ -63,7 +63,7 @@ models:
       - name: NATION_NAME
         description: "Name of the nation."
 
-      - name: _SOURCE_LOAD_TIMESTAMP
+      - name: _LOAD_TIMESTAMP
         description: "Load timestamp of the current BSAT record."
 
   - name: dim_region
@@ -80,7 +80,7 @@ models:
       - name: REGION_NAME
         description: "Name of the region."
 
-      - name: _SOURCE_LOAD_TIMESTAMP
+      - name: _LOAD_TIMESTAMP
         description: "Load timestamp of the current BSAT record."
 
   - name: fct_order_line

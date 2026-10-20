@@ -1,0 +1,54 @@
+
+name: Data Transformation CI
+
+on:
+  pull_request:
+    paths:
+      - "data-transformation/**"
+      - ".github/workflows/data-transformation-ci.yml"
+    branches:
+      - main
+
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  dbt-ci:
+    name: Validate dbt project
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: data-transformation
+
+    env:
+      SANDBOX_CI_SNOWFLAKE_ACCOUNT: ${{ secrets.SANDBOX_CI_SNOWFLAKE_ACCOUNT }}
+      SANDBOX_CI_SNOWFLAKE_USER: ${{ secrets.SANDBOX_CI_SNOWFLAKE_USER }}
+      SANDBOX_CI_SNOWFLAKE_PASSWORD: ${{ secrets.SANDBOX_CI_SNOWFLAKE_PASSWORD }}
+      SANDBOX_CI_SNOWFLAKE_ROLE: ${{ secrets.SANDBOX_CI_SNOWFLAKE_ROLE }}
+      SANDBOX_CI_SNOWFLAKE_WAREHOUSE: ${{ secrets.SANDBOX_CI_SNOWFLAKE_WAREHOUSE }}
+      SANDBOX_CI_SNOWFLAKE_DATABASE: ${{ secrets.SANDBOX_CI_SNOWFLAKE_DATABASE }}
+      SANDBOX_CI_SNOWFLAKE_SCHEMA: ${{ format('CI_{0}', github.run_id) }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+
+      - name: Install dbt Core and Snowflake adapter
+        run: |
+          python -m pip install --upgrade pip
+          pip install "dbt-core==1.12.5" "dbt-snowflake==1.12.1"
+
+      - name: Install dbt packages
+        run: dbt deps
+
+      - name: Compile dbt project
+        run: dbt build --target ci
