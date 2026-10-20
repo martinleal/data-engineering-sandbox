@@ -23,10 +23,10 @@ jobs:
       run:
         working-directory: data-transformation
 
-  env:
-    SANDBOX_CI_SNOWFLAKE_ACCOUNT: ${{ secrets.SANDBOX_CI_SNOWFLAKE_ACCOUNT }}
-    SANDBOX_CI_SNOWFLAKE_DATABASE: ${{ secrets.SANDBOX_CI_SNOWFLAKE_DATABASE }}
-    SANDBOX_CI_SNOWFLAKE_PRIVATE_KEY: ${{ secrets.SANDBOX_CI_SNOWFLAKE_PRIVATE_KEY }}
+    env:
+      SANDBOX_CI_SNOWFLAKE_ACCOUNT: ${{ secrets.SANDBOX_CI_SNOWFLAKE_ACCOUNT }}
+      SANDBOX_CI_SNOWFLAKE_DATABASE: ${{ secrets.SANDBOX_CI_SNOWFLAKE_DATABASE }}
+      SANDBOX_CI_SNOWFLAKE_PRIVATE_KEY: ${{ secrets.SANDBOX_CI_SNOWFLAKE_PRIVATE_KEY }}
 
     steps:
       - name: Checkout repository
