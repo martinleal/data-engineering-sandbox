@@ -13,3 +13,14 @@ sandbox:
       database: "{{ env_var('SANDBOX_DEV_SNOWFLAKE_DATABASE') }}"
       schema: "{{ env_var('SANDBOX_DEV_SNOWFLAKE_SCHEMA') }}"
       threads: 4
+
+    ci:
+      type: snowflake
+      account: "{{ env_var('SANDBOX_CI_SNOWFLAKE_ACCOUNT') }}"
+      user: DATA_CI_GITHUB
+      role: DATA_CI
+      warehouse: WH_CI
+      database: "{{ env_var('SANDBOX_CI_SNOWFLAKE_DATABASE') }}"
+      schema: "CI_{{ env_var('GITHUB_RUN_ID', 'LOCAL') }}"
+      private_key: "{{ env_var('SANDBOX_CI_SNOWFLAKE_PRIVATE_KEY') }}"
+      threads: 4
